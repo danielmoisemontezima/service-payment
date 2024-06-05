@@ -1,0 +1,44 @@
+name: np-pms
+
+services:
+
+  payment-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://db:27017/payment-ms-db
+    networks:
+      - np-pms-network
+
+  nginx:
+    image: nginx:latest
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/:/etc/nginx/conf.d/
+    depends_on:
+      - payment-api
+    networks:
+      - np-pms-network
+
+  db:
+    image: mongo:4.4
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=myuser
+      - MONGO_INITDB_ROOT_PASSWORD=mypassword
+      - MONGO_INITDB_DATABASE=payment-ms-db
+    volumes:
+      - db-data:/data/db
+    networks:
+      - np-pms-network
+
+volumes:
+  db-data:
+
+networks:
+  np-pms-network:
+    driver: bridge
